@@ -8,6 +8,8 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using i18n.Domain.Concrete;
+using EnvDTE;
+using Microsoft;
 
 namespace VSPackage.i18n_POTGenerator
 {
@@ -56,6 +58,7 @@ namespace VSPackage.i18n_POTGenerator
         /// </summary>
         protected override void Initialize()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             Debug.WriteLine (string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
 
@@ -73,7 +76,8 @@ namespace VSPackage.i18n_POTGenerator
 
         private object _getCurrentProject()
         {
-            var dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var dte = (DTE)Package.GetGlobalService(typeof(DTE));
 
             var activeProjects = dte.ActiveSolutionProjects as object[];
 
@@ -85,6 +89,7 @@ namespace VSPackage.i18n_POTGenerator
 
         private void _menuItemQueryStatus(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var command = sender as OleMenuCommand;
             if (command != null)
             {
@@ -95,6 +100,7 @@ namespace VSPackage.i18n_POTGenerator
 
         private void _menuItemChange(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var command = sender as OleMenuCommand;
             if (command != null)
             {
@@ -112,6 +118,7 @@ namespace VSPackage.i18n_POTGenerator
         /// </summary>
         private void _menuItemCallback(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             dynamic currentProject = _getCurrentProject();
             
             if (currentProject != null)
@@ -136,6 +143,7 @@ namespace VSPackage.i18n_POTGenerator
                 var ts = new TranslationMerger(rep);
                 ts.MergeAllTranslation(items);
                 var uiShell = (IVsUIShell)GetService(typeof(SVsUIShell));
+                Assumes.Present(uiShell);
                 var clsid = Guid.Empty;
                 int result;
                 ErrorHandler.ThrowOnFailure(uiShell.ShowMessageBox(
